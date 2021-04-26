@@ -1,25 +1,23 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-class Siswa extends CI_Controller{
+class Album extends CI_Controller{
 	function __construct(){
 		parent::__construct();
 		if($this->session->userdata('masuk') !=TRUE){
             $url=base_url('administrator');
             redirect($url);
         };
-		$this->load->model('m_siswa');
+		$this->load->model('m_album');
 		$this->load->model('m_pengguna');
-		$this->load->model('m_kelas');
 		$this->load->library('upload');
 	}
 
 
 	function index(){
-		$x['kelas']=$this->m_kelas->get_all_kelas();
-		$x['data']=$this->m_siswa->get_all_siswa();
-		$this->load->view('admin/v_siswa',$x);
+		$x['data']=$this->m_album->get_all_album();
+		$this->load->view('admin/v_album',$x);
 	}
 	
-	function simpan_siswa(){
+	function simpan_album(){
 				$config['upload_path'] = './assets/images/'; //path folder
 	            $config['allowed_types'] = 'gif|jpg|png|jpeg|bmp'; //type yang dapat diakses bisa anda sesuaikan
 	            $config['encrypt_name'] = TRUE; //nama yang terupload nantinya
@@ -36,40 +34,34 @@ class Siswa extends CI_Controller{
 	                        $config['create_thumb']= FALSE;
 	                        $config['maintain_ratio']= FALSE;
 	                        $config['quality']= '60%';
-	                        $config['width']= 300;
-	                        $config['height']= 300;
+	                        $config['width']= 500;
+	                        $config['height']= 400;
 	                        $config['new_image']= './assets/images/'.$gbr['file_name'];
 	                        $this->load->library('image_lib', $config);
 	                        $this->image_lib->resize();
 
-	                        $photo=$gbr['file_name'];
-							$nis=strip_tags($this->input->post('xnis'));
-							$nama=strip_tags($this->input->post('xnama'));
-							$jenkel=strip_tags($this->input->post('xjenkel'));
-							$kelas=strip_tags($this->input->post('xkelas'));
-
-							$this->m_siswa->simpan_siswa($nis,$nama,$jenkel,$kelas,$photo);
+	                        $gambar=$gbr['file_name'];
+							$album=strip_tags($this->input->post('xnama_album'));
+							$kode=$this->session->userdata('idadmin');
+							$user=$this->m_pengguna->get_pengguna_login($kode);
+							$p=$user->row_array();
+							$user_id=$p['pengguna_id'];
+							$user_nama=$p['pengguna_nama'];
+							$this->m_album->simpan_album($album,$user_id,$user_nama,$gambar);
 							echo $this->session->set_flashdata('msg','success');
-							redirect('admin/siswa');
+							redirect('admin/album');
 					}else{
 	                    echo $this->session->set_flashdata('msg','warning');
-	                    redirect('admin/siswa');
+	                    redirect('admin/album');
 	                }
 	                 
 	            }else{
-	            	$nis=strip_tags($this->input->post('xnis'));
-					$nama=strip_tags($this->input->post('xnama'));
-					$jenkel=strip_tags($this->input->post('xjenkel'));
-					$kelas=strip_tags($this->input->post('xkelas'));
-
-					$this->m_siswa->simpan_siswa_tanpa_img($nis,$nama,$jenkel,$kelas);
-					echo $this->session->set_flashdata('msg','success');
-					redirect('admin/siswa');
+					redirect('admin/album');
 				}
 				
 	}
 	
-	function update_siswa(){
+	function update_album(){
 				
 	            $config['upload_path'] = './assets/images/'; //path folder
 	            $config['allowed_types'] = 'gif|jpg|png|jpeg|bmp'; //type yang dapat diakses bisa anda sesuaikan
@@ -87,53 +79,55 @@ class Siswa extends CI_Controller{
 	                        $config['create_thumb']= FALSE;
 	                        $config['maintain_ratio']= FALSE;
 	                        $config['quality']= '60%';
-	                        $config['width']= 300;
-	                        $config['height']= 300;
+	                        $config['width']= 500;
+	                        $config['height']= 400;
 	                        $config['new_image']= './assets/images/'.$gbr['file_name'];
 	                        $this->load->library('image_lib', $config);
 	                        $this->image_lib->resize();
-	                        $gambar=$this->input->post('gambar');
-							$path='./assets/images/'.$gambar;
+
+	                        $gambar=$gbr['file_name'];
+	                        $album_id=$this->input->post('kode');
+	                        $album_nama=strip_tags($this->input->post('xnama_album'));
+							$images=$this->input->post('gambar');
+							$path='./assets/images/'.$images;
 							unlink($path);
-
-	                        $photo=$gbr['file_name'];
-	                        $kode=$this->input->post('kode');
-							$nis=strip_tags($this->input->post('xnis'));
-							$nama=strip_tags($this->input->post('xnama'));
-							$jenkel=strip_tags($this->input->post('xjenkel'));
-							$kelas=strip_tags($this->input->post('xkelas'));
-
-							$this->m_siswa->update_siswa($kode,$nis,$nama,$jenkel,$kelas,$photo);
+							$kode=$this->session->userdata('idadmin');
+							$user=$this->m_pengguna->get_pengguna_login($kode);
+							$p=$user->row_array();
+							$user_id=$p['pengguna_id'];
+							$user_nama=$p['pengguna_nama'];
+							$this->m_album->update_album($album_id,$album_nama,$user_id,$user_nama,$gambar);
 							echo $this->session->set_flashdata('msg','info');
-							redirect('admin/siswa');
+							redirect('admin/album');
 	                    
 	                }else{
 	                    echo $this->session->set_flashdata('msg','warning');
-	                    redirect('admin/siswa');
+	                    redirect('admin/album');
 	                }
 	                
 	            }else{
-							$kode=$this->input->post('kode');
-							$nis=strip_tags($this->input->post('xnis'));
-							$nama=strip_tags($this->input->post('xnama'));
-							$jenkel=strip_tags($this->input->post('xjenkel'));
-							$kelas=strip_tags($this->input->post('xkelas'));
-
-							$this->m_siswa->update_siswa_tanpa_img($kode,$nis,$nama,$jenkel,$kelas);
+							$album_id=$this->input->post('kode');
+	                        $album_nama=strip_tags($this->input->post('xnama_album'));
+							$kode=$this->session->userdata('idadmin');
+							$user=$this->m_pengguna->get_pengguna_login($kode);
+							$p=$user->row_array();
+							$user_id=$p['pengguna_id'];
+							$user_nama=$p['pengguna_nama'];
+							$this->m_album->update_album_tanpa_img($album_id,$album_nama,$user_id,$user_nama);
 							echo $this->session->set_flashdata('msg','info');
-							redirect('admin/siswa');
+							redirect('admin/album');
 	            } 
 
 	}
 
-	function hapus_siswa(){
+	function hapus_album(){
 		$kode=$this->input->post('kode');
 		$gambar=$this->input->post('gambar');
 		$path='./assets/images/'.$gambar;
 		unlink($path);
-		$this->m_siswa->hapus_siswa($kode);
+		$this->m_album->hapus_album($kode);
 		echo $this->session->set_flashdata('msg','success-hapus');
-		redirect('admin/siswa');
+		redirect('admin/album');
 	}
 
 }
